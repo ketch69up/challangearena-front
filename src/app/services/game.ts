@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -10,31 +10,65 @@ export class GameService {
 
   constructor(private http: HttpClient) {}
 
-  register(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, data);
+  private getHeaders() {
+    const token = localStorage.getItem('token');
+
+    return {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${token}`
+      })
+    };
   }
 
   login(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, data);
   }
 
-  getProfile(userId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/profile/${userId}`);
+  register(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/register`, data);
   }
 
-  getChallenge(difficulty: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/challenge/${difficulty}`);
+  logout(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/logout`, {}, this.getHeaders());
   }
 
-  skipChallenge(userId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/skip/${userId}`);
+  getProfile(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/profile`, this.getHeaders());
   }
 
-  completeChallenge(challengeId: number, userId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/complete/${challengeId}/${userId}`);
+  getChallenge(difficulty: string, excludeId?: number): Observable<any> {
+    let url = `${this.apiUrl}/challenges/random?difficulty=${difficulty}`;
+
+    if (excludeId) {
+      url += `&exclude_id=${excludeId}`;
+    }
+
+    return this.http.get(url, this.getHeaders());
+  }
+
+  skipChallenge(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/challenges/skip`, {}, this.getHeaders());
+  }
+
+  submitProof(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/proofs`, data, this.getHeaders());
   }
 
   getLeaderboard(): Observable<any> {
     return this.http.get(`${this.apiUrl}/leaderboard`);
+  }
+
+  getCommunityChallenges(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/community-challenges`);
+  }
+
+  suggestCommunityChallenge(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/community-challenges`, data, this.getHeaders());
+  }
+
+  voteCommunityChallenge(id: number, vote: 'like' | 'dislike'): Observable<any> {
+    return this.http.post(`${this.apiUrl}/community-challenges/${id}/vote`, {
+      vote
+    }, this.getHeaders());
   }
 }

@@ -10,6 +10,7 @@
         <button (click)="setAuthMode('login')" [class.active]="authMode === 'login'">
           Login
         </button>
+
         <button (click)="setAuthMode('register')" [class.active]="authMode === 'register'">
           Register
         </button>
@@ -18,7 +19,6 @@
       <div *ngIf="authMode === 'login'" class="auth-form">
         <input type="email" placeholder="Email" [(ngModel)]="loginData.email" />
         <input type="password" placeholder="Password" [(ngModel)]="loginData.password" />
-
         <button class="start-btn" (click)="login()">Login</button>
       </div>
 
@@ -59,38 +59,44 @@
         <h1>ChallengeArena</h1>
 
         <nav>
-          <button (click)="setSection('home')" [class.active]="activeSection === 'home'">
-            Home
-          </button>
-          <button (click)="setSection('profile')" [class.active]="activeSection === 'profile'">
-            Profile
-          </button>
-          <button (click)="setSection('challenge')" [class.active]="activeSection === 'challenge'">
-            Challenges
-          </button>
-          <button (click)="setSection('leaderboard')" [class.active]="activeSection === 'leaderboard'">
-            Rank
-          </button>
+          <button (click)="setSection('home')" [class.active]="activeSection === 'home'">Home</button>
+          <button (click)="setSection('profile')" [class.active]="activeSection === 'profile'">Profile</button>
+          <button (click)="setSection('challenge')" [class.active]="activeSection === 'challenge'">Challenges</button>
+          <button (click)="setSection('community')" [class.active]="activeSection === 'community'">Community</button>
+          <button (click)="setSection('leaderboard')" [class.active]="activeSection === 'leaderboard'">Rank</button>
         </nav>
       </header>
 
       <section *ngIf="activeSection === 'home'" class="home-section">
-        <div class="avatar" [style.background]="player?.avatar_color">
+        <div class="avatar" [style.background]="player?.avatar_color || '#1e293b'">
+          <img
+            *ngIf="player?.name === 'Queen'"
+            src="http://127.0.0.1:8000/avatars/queen.png"
+            class="avatar-img"
+          />
 
-  <ng-container *ngIf="player?.avatar?.startsWith('/'); else emojiAvatar">
-    <img [src]="player.avatar" class="avatar-img" />
-  </ng-container>
+          <span *ngIf="player?.name !== 'Queen'">
+            {{ player?.avatar }}
+          </span>
+        </div>
 
-  <ng-template #emojiAvatar>
-    {{ player?.avatar }}
-  </ng-template>
-
-</div>
         <h2>{{ player?.name }}</h2>
-        <p class="level">Level {{ player?.level }}</p>
 
-        <div class="hearts">
-          <span *ngFor="let heart of [].constructor(player?.energy || 0)">❤️</span>
+        <div class="player-stats">
+          <p class="level">Level {{ player?.level }}</p>
+
+          <div class="xp-bar">
+            <div class="xp-fill" [style.width.%]="getXpProgress()"></div>
+          </div>
+
+          <p class="xp-text">
+            XP: {{ player?.xp % 100 }}/100
+            <span>({{ getXpToNextLevel() }} XP to next level)</span>
+          </p>
+
+          <div class="hearts">
+            <span *ngFor="let heart of [].constructor(player?.energy || 0)">❤️</span>
+          </div>
         </div>
 
         <button class="start-btn" (click)="setSection('challenge')">
@@ -103,8 +109,16 @@
       <section *ngIf="activeSection === 'profile'" class="card">
         <h2>Player Profile</h2>
 
-        <div class="avatar mini" [style.background]="player?.avatar_color">
-          {{ player?.avatar }}
+        <div class="avatar mini" [style.background]="player?.avatar_color || '#1e293b'">
+          <img
+            *ngIf="player?.name === 'Queen'"
+            src="http://127.0.0.1:8000/avatars/queen.png"
+            class="avatar-img"
+          />
+
+          <span *ngIf="player?.name !== 'Queen'">
+            {{ player?.avatar }}
+          </span>
         </div>
 
         <p><strong>Name:</strong> {{ player?.name }}</p>
@@ -130,9 +144,66 @@
           <p>{{ currentChallenge.description }}</p>
           <p class="reward">+{{ currentChallenge.xp_reward }} XP</p>
 
+          <label>Proof</label>
+          <textarea
+            rows="4"
+            placeholder="Write what you did as proof..."
+            [(ngModel)]="proofText"
+          ></textarea>
+
           <div class="actions">
             <button class="skip" (click)="skipChallenge()">Skip</button>
-            <button class="complete" (click)="completeChallenge()">Complete</button>
+            <button class="complete" (click)="submitProof()">Submit Proof</button>
+          </div>
+        </div>
+      </section>
+
+      <section *ngIf="activeSection === 'community'" class="card">
+        <h2>Community Challenges</h2>
+
+        <div class="community-form">
+          <input
+            type="text"
+            placeholder="Challenge title"
+            [(ngModel)]="communityForm.title"
+          />
+
+          <textarea
+            rows="3"
+            placeholder="Challenge description"
+            [(ngModel)]="communityForm.description"
+          ></textarea>
+
+          <select [(ngModel)]="communityForm.difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+
+          <button class="main-btn" (click)="suggestChallenge()">
+            Suggest Challenge
+          </button>
+        </div>
+
+        <div class="community-list">
+          <div class="community-card" *ngFor="let item of communityChallenges">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+
+            <div class="community-meta">
+              <span>{{ item.difficulty }}</span>
+              <span>{{ item.status }}</span>
+            </div>
+
+            <div class="community-actions">
+              <button (click)="voteCommunityChallenge(item.id, 'like')">
+                👍 {{ item.likes }}
+              </button>
+
+              <button (click)="voteCommunityChallenge(item.id, 'dislike')">
+                👎 {{ item.dislikes }}
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -147,6 +218,10 @@
           <span>Lv {{ user.level }}</span>
         </div>
       </section>
+
+      <div *ngIf="rewardMessage" class="reward-popup">
+        {{ rewardMessage }}
+      </div>
 
       <p *ngIf="message" class="message">{{ message }}</p>
     </div>
