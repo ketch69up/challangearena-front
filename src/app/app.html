@@ -28,6 +28,7 @@
         <input type="password" placeholder="Password" [(ngModel)]="registerData.password" />
 
         <p class="small-title">Choose Avatar</p>
+
         <div class="avatar-picker">
           <button
             *ngFor="let avatar of avatars"
@@ -39,6 +40,7 @@
         </div>
 
         <p class="small-title">Choose Color</p>
+
         <div class="color-picker">
           <button
             *ngFor="let color of colors"
@@ -59,11 +61,33 @@
         <h1>ChallengeArena</h1>
 
         <nav>
-          <button (click)="setSection('home')" [class.active]="activeSection === 'home'">Home</button>
-          <button (click)="setSection('profile')" [class.active]="activeSection === 'profile'">Profile</button>
-          <button (click)="setSection('challenge')" [class.active]="activeSection === 'challenge'">Challenges</button>
-          <button (click)="setSection('community')" [class.active]="activeSection === 'community'">Community</button>
-          <button (click)="setSection('leaderboard')" [class.active]="activeSection === 'leaderboard'">Rank</button>
+          <button (click)="setSection('home')" [class.active]="activeSection === 'home'">
+            Home
+          </button>
+
+          <button (click)="setSection('profile')" [class.active]="activeSection === 'profile'">
+            Profile
+          </button>
+
+          <button (click)="setSection('challenge')" [class.active]="activeSection === 'challenge'">
+            Challenges
+          </button>
+
+          <button (click)="setSection('community')" [class.active]="activeSection === 'community'">
+            Community
+          </button>
+
+          <button (click)="setSection('leaderboard')" [class.active]="activeSection === 'leaderboard'">
+            Rank
+          </button>
+
+          <button
+            *ngIf="isAdmin()"
+            (click)="setSection('admin')"
+            [class.active]="activeSection === 'admin'"
+          >
+            Admin
+          </button>
         </nav>
       </header>
 
@@ -125,12 +149,14 @@
         <p><strong>XP:</strong> {{ player?.xp }}</p>
         <p><strong>Level:</strong> {{ player?.level }}</p>
         <p><strong>Energy:</strong> {{ player?.energy }} / 5</p>
+        <p *ngIf="isAdmin()"><strong>Role:</strong> Admin</p>
       </section>
 
       <section *ngIf="activeSection === 'challenge'" class="card">
         <h2>Choose Your Challenge</h2>
 
         <label>Difficulty</label>
+
         <select [(ngModel)]="difficulty">
           <option value="easy">Easy</option>
           <option value="medium">Medium</option>
@@ -145,6 +171,7 @@
           <p class="reward">+{{ currentChallenge.xp_reward }} XP</p>
 
           <label>Proof</label>
+
           <textarea
             rows="4"
             placeholder="Write what you did as proof..."
@@ -216,6 +243,129 @@
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section *ngIf="activeSection === 'admin' && isAdmin()" class="card">
+        <h2>Admin Control Panel</h2>
+
+        <div *ngIf="adminStats" class="admin-stats">
+          <p><strong>Users:</strong> {{ adminStats.users }}</p>
+          <p><strong>Official Challenges:</strong> {{ adminStats.official_challenges }}</p>
+          <p><strong>Player Challenges:</strong> {{ adminStats.community_challenges }}</p>
+          <p><strong>Pending:</strong> {{ adminStats.pending_community_challenges }}</p>
+          <p><strong>Approved:</strong> {{ adminStats.approved_community_challenges }}</p>
+        </div>
+
+        <hr />
+
+        <h3>Create Official Challenge</h3>
+
+        <div class="community-form">
+          <input
+            type="text"
+            placeholder="Challenge title"
+            [(ngModel)]="adminChallengeForm.title"
+          />
+
+          <textarea
+            rows="3"
+            placeholder="Challenge description"
+            [(ngModel)]="adminChallengeForm.description"
+          ></textarea>
+
+          <select [(ngModel)]="adminChallengeForm.difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+
+          <input
+            type="number"
+            placeholder="XP Reward"
+            [(ngModel)]="adminChallengeForm.xp_reward"
+          />
+
+          <button class="main-btn" (click)="createAdminChallenge()">
+            Add Official Challenge
+          </button>
+        </div>
+
+        <hr />
+
+        <h3>Official Challenges</h3>
+
+        <div class="community-list">
+          <div class="community-card" *ngFor="let challenge of adminChallenges">
+            <h3>{{ challenge.title }}</h3>
+            <p>{{ challenge.description }}</p>
+
+            <div class="community-meta">
+              <span>{{ challenge.difficulty }}</span>
+              <span>{{ challenge.xp_reward }} XP</span>
+            </div>
+
+            <button class="skip" (click)="deleteAdminChallenge(challenge.id)">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <hr />
+
+        <h3>Player Challenges</h3>
+
+        <div class="community-list">
+          <div class="community-card" *ngFor="let item of adminCommunityChallenges">
+            <div class="community-header">
+              <h3>{{ item.title }}</h3>
+
+              <span
+                class="challenge-badge"
+                [class.official]="item.status === 'approved'"
+                [class.player]="item.status !== 'approved'"
+              >
+                {{ item.status === 'approved' ? 'Official Challenge' : 'Player Challenge' }}
+              </span>
+            </div>
+
+            <p>{{ item.description }}</p>
+
+            <div class="community-meta">
+              <span>{{ item.difficulty }}</span>
+              <span>{{ item.likes }}/40 likes</span>
+              <span>👎 {{ item.dislikes }}</span>
+            </div>
+
+            <div class="community-actions">
+              <button
+                class="complete"
+                *ngIf="item.status !== 'approved'"
+                (click)="approveCommunityAsAdmin(item.id)"
+              >
+                Approve
+              </button>
+
+              <button class="skip" (click)="deleteCommunityAsAdmin(item.id)">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <h3>Users</h3>
+
+        <div class="rank-row" *ngFor="let user of adminUsers">
+          <strong>{{ user.name }}</strong>
+          <span>{{ user.email }}</span>
+          <span>{{ user.xp }} XP</span>
+          <span>Lv {{ user.level }}</span>
+
+          <button class="skip" (click)="deleteUserAsAdmin(user.id)">
+            Delete
+          </button>
         </div>
       </section>
 

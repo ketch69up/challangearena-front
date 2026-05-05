@@ -45,6 +45,148 @@ export class App implements OnInit {
     description: '',
     difficulty: 'easy'
   };
+  adminStats: any = null;
+adminUsers: any[] = [];
+adminChallenges: any[] = [];
+adminCommunityChallenges: any[] = [];
+
+adminChallengeForm = {
+  title: '',
+  description: '',
+  difficulty: 'easy',
+  xp_reward: 10
+};
+isAdmin(): boolean {
+  return this.player?.is_admin === true || this.player?.is_admin === 1;
+}
+
+loadAdminPanel() {
+  if (!this.isAdmin()) {
+    this.message = 'Admin access required.';
+    return;
+  }
+
+  this.gameService.getAdminDashboard().subscribe({
+    next: (data: any) => {
+      this.adminStats = data;
+    }
+  });
+
+  this.loadAdminUsers();
+  this.loadAdminChallenges();
+  this.loadAdminCommunityChallenges();
+}
+
+loadAdminUsers() {
+  this.gameService.getAdminUsers().subscribe({
+    next: (data: any) => {
+      this.adminUsers = data;
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not load admin users.';
+    }
+  });
+}
+
+loadAdminChallenges() {
+  this.gameService.getAdminChallenges().subscribe({
+    next: (data: any) => {
+      this.adminChallenges = data;
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not load admin challenges.';
+    }
+  });
+}
+
+loadAdminCommunityChallenges() {
+  this.gameService.getAdminCommunityChallenges().subscribe({
+    next: (data: any) => {
+      this.adminCommunityChallenges = data;
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not load community challenges.';
+    }
+  });
+}
+
+createAdminChallenge() {
+  this.gameService.createAdminChallenge(this.adminChallengeForm).subscribe({
+    next: (data: any) => {
+      this.message = data.message;
+
+      this.adminChallengeForm = {
+        title: '',
+        description: '',
+        difficulty: 'easy',
+        xp_reward: 10
+      };
+
+      this.loadAdminChallenges();
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not create challenge.';
+    }
+  });
+}
+
+deleteAdminChallenge(id: number) {
+  if (!confirm('Delete this official challenge?')) return;
+
+  this.gameService.deleteAdminChallenge(id).subscribe({
+    next: (data: any) => {
+      this.message = data.message;
+      this.loadAdminChallenges();
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not delete challenge.';
+    }
+  });
+}
+
+approveCommunityAsAdmin(id: number) {
+  this.gameService.approveAdminCommunityChallenge(id).subscribe({
+    next: (data: any) => {
+      this.message = data.message;
+      this.loadAdminCommunityChallenges();
+      this.loadCommunityChallenges();
+      this.loadAdminChallenges();
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not approve challenge.';
+    }
+  });
+}
+
+deleteCommunityAsAdmin(id: number) {
+  if (!confirm('Delete this player challenge?')) return;
+
+  this.gameService.deleteAdminCommunityChallenge(id).subscribe({
+    next: (data: any) => {
+      this.message = data.message;
+      this.loadAdminCommunityChallenges();
+      this.loadCommunityChallenges();
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not delete player challenge.';
+    }
+  });
+}
+
+deleteUserAsAdmin(id: number) {
+  if (!confirm('Delete this user?')) return;
+
+  this.gameService.deleteAdminUser(id).subscribe({
+    next: (data: any) => {
+      this.message = data.message;
+      this.loadAdminUsers();
+      this.loadLeaderboard();
+    },
+    error: (err: any) => {
+      this.message = err.error?.message || 'Could not delete user.';
+    }
+  });
+}
 
   constructor(private gameService: GameService) {}
 
@@ -133,6 +275,9 @@ export class App implements OnInit {
   setSection(section: string) {
     this.activeSection = section;
     this.message = '';
+    if (section === 'admin') {
+  this.loadAdminPanel();
+}
 
     if (section === 'leaderboard') {
       this.loadLeaderboard();

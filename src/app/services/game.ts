@@ -70,4 +70,39 @@ private apiUrl = 'https://web-production-d492c.up.railway.app/api';
       vote
     }, this.getHeaders());
   }
+  getAdminDashboard(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/admin/dashboard`, this.getHeaders());
+}
+
+getAdminUsers(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/admin/users`, this.getHeaders());
+}
+
+deleteAdminUser(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/admin/users/${id}`, this.getHeaders());
+}
+
+getAdminChallenges(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/admin/challenges`, this.getHeaders());
+}
+
+createAdminChallenge(data: any): Observable<any> {
+  return this.http.post(`${this.apiUrl}/admin/challenges`, data, this.getHeaders());
+}
+
+deleteAdminChallenge(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/admin/challenges/${id}`, this.getHeaders());
+}
+
+getAdminCommunityChallenges(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/admin/community-challenges`, this.getHeaders());
+}
+
+approveAdminCommunityChallenge(id: number): Observable<any> {
+  return this.http.post(`${this.apiUrl}/admin/community-challenges/${id}/approve`, {}, this.getHeaders());
+}
+
+deleteAdminCommunityChallenge(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/admin/community-challenges/${id}`, this.getHeaders());
+}
 }
