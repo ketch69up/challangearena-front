@@ -102,15 +102,15 @@ export class App implements OnInit {
       this.message = '';
     },
     error: (err: any) => {
-      console.error('Register error:', err);
+  console.error('Login error:', err);
 
-      if (err.error?.errors) {
-        const firstErrorKey = Object.keys(err.error.errors)[0];
-        this.message = err.error.errors[firstErrorKey][0];
-      } else {
-        this.message = err.error?.message || err.message || 'Register failed.';
-      }
-    }
+  if (err.error?.errors) {
+    const firstErrorKey = Object.keys(err.error.errors)[0];
+    this.message = err.error.errors[firstErrorKey][0];
+  } else {
+    this.message = err.error?.message || err.message || 'Login failed.';
+  }
+}
   });
 }
 
