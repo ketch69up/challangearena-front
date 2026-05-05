@@ -6,8 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class GameService {
-  private apiUrl = 'http://127.0.0.1:8000/api';
-
+private apiUrl = 'https://web-production-d492c.up.railway.app/api';
   constructor(private http: HttpClient) {}
 
   private getHeaders() {
