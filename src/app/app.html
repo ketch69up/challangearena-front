@@ -187,12 +187,23 @@
 
         <div class="community-list">
           <div class="community-card" *ngFor="let item of communityChallenges">
-            <h3>{{ item.title }}</h3>
+            <div class="community-header">
+              <h3>{{ item.title }}</h3>
+
+              <span
+                class="challenge-badge"
+                [class.official]="item.status === 'approved'"
+                [class.player]="item.status !== 'approved'"
+              >
+                {{ item.status === 'approved' ? 'Official Challenge' : 'Player Challenge' }}
+              </span>
+            </div>
+
             <p>{{ item.description }}</p>
 
             <div class="community-meta">
               <span>{{ item.difficulty }}</span>
-              <span>{{ item.status }}</span>
+              <span>{{ item.likes }}/40 likes</span>
             </div>
 
             <div class="community-actions">
